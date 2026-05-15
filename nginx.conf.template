@@ -17,6 +17,8 @@ http {
       proxy_set_header Connection "upgrade";
 
       proxy_set_header Host $host;
+      proxy_read_timeout 620s;
+      proxy_send_timeout 620s;
       proxy_pass ${PROXY_PASS};
     }
     location /dev {
