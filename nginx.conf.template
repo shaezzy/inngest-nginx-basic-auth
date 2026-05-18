@@ -9,8 +9,18 @@ http {
     listen ${PORT};
     server_name _;
 
-    # Common proxy headers snippet (reused across unprotected locations)
-    # WebSocket upgrade for realtime
+    # API v1 – runs, events, apps, cancellations, signals, traces
+    location /v1/ {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # WebSocket realtime (more specific than /v1/, takes precedence for upgrade requests)
     location /v1/realtime/ {
       auth_basic off;
 
