@@ -9,6 +9,8 @@ http {
     listen ${PORT};
     server_name _;
 
+    # Common proxy headers snippet (reused across unprotected locations)
+    # WebSocket upgrade for realtime
     location /v1/realtime/ {
       auth_basic off;
 
@@ -21,6 +23,8 @@ http {
       proxy_send_timeout 620s;
       proxy_pass ${PROXY_PASS};
     }
+
+    # Dev API – function registration, OTLP traces, dev info
     location /dev {
       auth_basic off;
 
@@ -30,10 +34,89 @@ http {
 
       proxy_pass ${PROXY_PASS};
     }
+
+    # Event ingestion
+    location /e/ {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # Function registration / management (SDK sync)
+    location /fn/ {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # Health check
+    location /health {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # Function invocation
+    location /invoke/ {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # REST API v2
+    location /api/ {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # Core API v0
+    location /v0/ {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # Prometheus metrics
+    location /metrics {
+      auth_basic off;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+      proxy_pass ${PROXY_PASS};
+    }
+
+    # Dashboard – protected by basic auth
     location / {
         auth_basic	"Restricted";
         auth_basic_user_file	/etc/nginx/.htpasswd;
-        
+
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
