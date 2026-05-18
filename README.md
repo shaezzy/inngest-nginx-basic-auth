@@ -53,3 +53,5 @@ Password for the dashboard login prompt.
 ## Notes
 
 **First load** — On the first visit to the dashboard you may need to enter the username and password a few times before it loads. This is normal; the browser sends several requests for the initial page and each one triggers the auth prompt.
+
+**Timeouts after redeploying Inngest** — The nginx config is generated at build time, so the Inngest service address is baked into the image. If you redeploy the Inngest service its internal IP changes, causing nginx to time out until it is also redeployed. If you see timeouts after an Inngest redeploy, trigger a redeploy of this proxy service as well.
