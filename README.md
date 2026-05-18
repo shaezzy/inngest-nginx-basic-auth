@@ -1,64 +1,51 @@
 # Inngest Basic Auth Nginx Proxy for Railway.app
 
-An nginx reverse proxy that sits in front of a self-hosted [Inngest](https://www.inngest.com) instance and password-protects the dashboard, while letting all API traffic through unauthenticated.
+An nginx reverse proxy that sits in front of a self-hosted [Inngest](https://www.inngest.com) instance on Railway and password-protects the dashboard, while letting all API traffic through unauthenticated.
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/bYH8Xt?referralCode=WSv72h)
 
-## Why
+## The problem
 
-The Inngest dev server exposes everything on a single port — both the browser dashboard and the API endpoints that your apps, SDKs, and monitoring tools call at runtime. If you expose that port publicly on Railway you need a way to lock down the UI without breaking the API.
+When you self-host Inngest on Railway and enable public networking, the Inngest dashboard becomes publicly accessible to anyone — there is no built-in authentication. This proxy sits in front of Inngest and adds HTTP basic auth to the dashboard without touching the Inngest service itself.
 
-This proxy solves that with a simple rule: **requests to `/` (the dashboard) require a username and password; every other path is forwarded as-is.**
+## How it works
 
-## What is protected vs open
+All Inngest API endpoints (event ingestion, function registration, run management, etc.) must remain publicly reachable so your apps and the Inngest SDK can call them without a password. Only the dashboard UI at `/` is protected.
 
-| Path | Protected | What uses it |
-|------|-----------|--------------|
-| `/` (dashboard SPA) | **Yes — basic auth** | Browser / human access |
+| Path | Protected | Purpose |
+|------|-----------|---------|
+| `/` (dashboard) | **Yes — basic auth** | Inngest web UI |
 | `/e/{key}` | No | Event ingestion from your apps |
-| `/fn/` | No | Inngest SDK function registration and sync |
+| `/fn/` | No | SDK function registration and sync |
 | `/invoke/` | No | Function invocation |
 | `/health` | No | Health checks |
 | `/v0/` | No | Core API |
 | `/v1/` | No | REST API v1 — runs, events, apps, cancellations, signals, traces |
-| `/v1/realtime/` | No | WebSocket realtime connection (upgraded) |
+| `/v1/realtime/` | No | WebSocket realtime connection |
 | `/api/` | No | REST API v2 |
 | `/dev` | No | Dev server info and OTLP traces |
 | `/metrics` | No | Prometheus metrics |
 
-## Usage
+## Networking
 
-### Step 1
+The Inngest API is exposed publicly at `https://<nginx-proxy-public-url>`. This URL can be used to access the dashboard (with a password) and is the address you give to any external services that need to send events or call the API.
 
-Fork this repo and deploy it in the same Railway project as your Inngest service.
+However, if your app is hosted in the same Railway project as Inngest, it is recommended to connect directly using Railway's private networking: `http://inngest.railway.internal:8288`. This keeps traffic internal and avoids the public internet entirely. Use `https://<nginx-proxy-public-url>` only for dashboard access in that case.
 
-### Step 2
+## Setup
 
-Set the following environment variables on the deployed proxy service.
+Deploy this template on Railway and set the following environment variables.
 
-**`ENABLE_ALPINE_PRIVATE_NETWORKING`**
+**`INNGEST_SERVE_ORIGIN`**
 
-Required for Alpine-based image networking on Railway. Set to `true`.
+The URL of your app's Inngest serve endpoint. Inngest calls this URL to trigger your functions. If your app is in the same Railway project, use the private network URL.
 
-**`PROXY_PASS`**
+Example: `http://my-app.railway.internal:3000`
 
-The private network URL of your Inngest service.
+**`DASHBOARD_USERNAME`**
 
-Example: `http://inngest.railway.internal:8288`
+Username for the dashboard login prompt.
 
-**`PORT`**
+**`DASHBOARD_PASSWORD`**
 
-The port nginx listens on. Default is `80`. Railway uses this to route public traffic.
-
-**`USERNAME`**
-
-Username for the dashboard. Default is `user`.
-
-**`PASSWORD`**
-
-Password for the dashboard. Default is `password`.
-
-## References
-
-1. [Simple HTML App with NGINX Docker container doesn't run on Railway.app (error-503)](https://stackoverflow.com/questions/76348107/simple-html-app-with-ngnix-docker-container-doesnt-run-on-railway-app-applica)
-2. [Workaround for Alpine-based images — Railway docs](https://docs.railway.app/reference/private-networking#workaround-for-alpine-based-images)
+Password for the dashboard login prompt.

@@ -1,9 +1,9 @@
 #!/bin/sh
 
-USER_NAME=${USERNAME}
-PASSWD=${PASSWORD}
+USER_NAME=${DASHBOARD_USERNAME}
+PASSWD=${DASHBOARD_PASSWORD}
 
-echo "Generating password for user ${USER_NAME}"
+echo "Generating password for dashboard user ${USER_NAME}"
 
 CRYPTPASS=`openssl passwd -apr1 ${PASSWD}`
 
