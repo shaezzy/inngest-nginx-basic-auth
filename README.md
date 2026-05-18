@@ -49,3 +49,7 @@ Username for the dashboard login prompt.
 **`DASHBOARD_PASSWORD`**
 
 Password for the dashboard login prompt.
+
+## Notes
+
+**First load** — On the first visit to the dashboard you may need to enter the username and password a few times before it loads. This is normal; the browser sends several requests for the initial page and each one triggers the auth prompt.
