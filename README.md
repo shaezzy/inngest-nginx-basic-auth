@@ -1,6 +1,6 @@
 # Inngest Basic Auth Nginx Proxy for Railway.app
 
-An nginx reverse proxy that sits in front of a self-hosted [Inngest](https://www.inngest.com) instance on Railway and password-protects the dashboard, while letting all API traffic through unauthenticated.
+An nginx reverse proxy that sits in front of a self-hosted [Inngest](https://www.inngest.com) instance on Railway and password-protects the dashboard, while letting all API traffic through without the nginx password — API requests are still secured by Inngest's own event keys and signing keys.
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/bYH8Xt?referralCode=WSv72h)
 
