@@ -10,7 +10,7 @@ When you self-host Inngest on Railway and enable public networking, the Inngest 
 
 ## How it works
 
-All Inngest API endpoints (event ingestion, function registration, run management, etc.) must remain publicly reachable so your apps and the Inngest SDK can call them without a password. Only the dashboard UI at `/` is protected.
+All Inngest API endpoints (event ingestion, function registration, run management, etc.) must remain publicly reachable so your apps and the Inngest SDK can call them without a password. The dashboard UI at `/` and its status endpoint at `/dev` require Basic Auth. After authenticating `/dev`, nginx supplies the Inngest signing key upstream. Other API requests keep their original authentication.
 
 | Path | Protected | Purpose |
 |------|-----------|---------|
@@ -23,7 +23,8 @@ All Inngest API endpoints (event ingestion, function registration, run managemen
 | `/v1/` | No | REST API v1 — runs, events, apps, cancellations, signals, traces |
 | `/v1/realtime/` | No | WebSocket realtime connection |
 | `/api/` | No | REST API v2 |
-| `/dev` | No | Dev server info and OTLP traces |
+| `/dev` | **Yes — basic auth** | Dashboard status; proxy adds signing-key authentication |
+| `/dev/traces` | No | OTLP traces; caller authentication passes through |
 | `/metrics` | No | Prometheus metrics |
 
 ## Networking
@@ -49,3 +50,28 @@ Username for the dashboard login prompt.
 **`DASHBOARD_PASSWORD`**
 
 Password for the dashboard login prompt.
+
+**`INNGEST_SIGNING_KEY`**
+
+The same signing key configured on the Inngest service. On Railway, use
+`${{inngest.INNGEST_SIGNING_KEY}}`. The proxy sends it only for authenticated
+requests to the exact `/dev` path. It is never sent to the browser.
+
+**`PROXY_PASS`**
+
+The Inngest server URL, such as `http://inngest.railway.internal:8288`.
+
+**`PORT`**
+
+The proxy listening port, default `4000`.
+
+Configuration and dashboard credentials are generated when the container starts,
+not during the image build. Existing deployments must set the signing key and
+dashboard credentials as runtime variables before deploying this change.
+
+## Dashboard status compatibility
+
+The `/dev` proxy rule fixes signing-key authentication failures. The upstream
+Inngest version must also expose `GET /dev`: versions that return 404 for this
+endpoint in self-hosted mode need a compatible dashboard/server release. This
+proxy does not fabricate a status response or enable development mode.
